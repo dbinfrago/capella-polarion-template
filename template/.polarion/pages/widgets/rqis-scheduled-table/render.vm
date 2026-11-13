@@ -32,9 +32,8 @@
         </th>
       </tr>
 #foreach($wi in $dataSet.items())
-  #if($shown >= $maxItems)
-    #break
-  #end
+## Polarion's Velocity engine has no #break directive; skip rows past the limit.
+#if($shown < $maxItems)
   #set($shown = $shown + 1)
   #set($wiId = $wi.fields().id().get())
       <tr class="polarion-rpw-table-content-row">
@@ -46,6 +45,7 @@
         <td><div style="max-height:200px;overflow:auto;">$wi.fields().get("cfRQISEvaluation").render().htmlFor().forFrame()</div></td>
         <td style="text-align:center;"><input type="checkbox" class="rqis-sched-box" data-wi="$esc.html($wiId)" data-scheduled="$wi.fields().get($fieldId).get()"></td>
       </tr>
+#end
 #end
     </tbody>
   </table>
