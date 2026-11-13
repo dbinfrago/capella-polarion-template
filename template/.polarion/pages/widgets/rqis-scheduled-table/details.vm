@@ -1,0 +1,3 @@
+## SPDX-FileCopyrightText: Copyright DB InfraGO AG and contributors
+## SPDX-License-Identifier: Apache-2.0
+Work-Item-Tabelle mit setzbarem Feld "RQIS Ausführung geplant" (cfRQISPipelineScheduled) und Alle-auswählen-Checkbox. Schreibt über die Polarion REST API mit der Sitzung des angemeldeten Benutzers.

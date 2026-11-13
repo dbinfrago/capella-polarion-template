@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-FileCopyrightText: Copyright DB InfraGO AG and contributors
+SPDX-License-Identifier: Apache-2.0 -->
+<rich-page>
+    <field id="author">4348</field>
+    <field id="created">2026-05-22 15:00:30.629 +0200</field>
+    <field id="homePageContent" text-type="text/html"><![CDATA[<div class="polarion-rp-column" style="width: 100%;">
+  <h1 id="polarion_hardcoded_0">RQIS Übersicht für ein LH</h1>
+</div>
+<div class="polarion-rp-row-separator" page_min_width="1000"></div>
+<div class="polarion-rp-column" style="width: 100%;">
+  <div id="polarion_client9" class="polarion-rp-widget-part" data-widget="com.polarion.pageParametersForm">
+    <span class="polarion-rp-widget-parameters">
+      <sub id="title">Eingeben des Dokumentes für die Anforderungen</sub>
+      <sub id="content">
+        <sub>Dokument</sub>
+        <sub>Work_Item_Type</sub>
+      </sub>
+      <sub id="width">500</sub>
+    </span>
+  </div>
+  <p id="polarion_client10"></p>
+  <div id="polarion_client5" class="polarion-rp-widget-part" data-widget="rqis-scheduled-table">
+    <span class="polarion-rp-widget-parameters">
+      <sub id="dataSet">
+        <sub id="prototype">WorkItem</sub>
+        <sub id="subtype"></sub>
+        <sub id="queryType">luceneVelocity</sub>
+        <sub id="luceneQuery" style="white-space:pre;">#set($types = &quot;&quot;)
+#foreach($t in $pageParameters.Work_Item_Type.values)
+    #set($types = &quot;$types $t.id&quot;)
+#end
+#set($types = $types.trim())
+#if($types.isEmpty())
+    #set($types = &quot;systemreq&quot;)
+#end
+#set($query = &quot;NOT status:deleted AND type:($types)&quot;)
+#if($pageParameters.Dokument.values.isEmpty() == false)
+    #set($docId = $pageParameters.Dokument.singleValue.id)
+    #set($docId = $docId.replace(&quot; / &quot;, &quot;/&quot;))
+    #set($docId = $docId.replace(&quot;_default/&quot;, &quot;&quot;))
+    #set($query = &quot;$query AND document.id:${esc.q}$docId${esc.q}&quot;)
+#end
+$query</sub>
+      </sub>
+      <sub id="maxItems">300</sub>
+    </span>
+  </div>
+  <p id="polarion_2"></p>
+</div>
+<div class="polarion-rp-row-separator"></div>
+<span id="polarion-rp-parameters">
+  <sub id="Dokument" data-label="Dokument" data-type="Enumeration">
+    <sub id="enumId">@document</sub>
+    <sub id="allowNoValue">true</sub>
+    <sub id="allowMultipleValues">false</sub>
+    <sub id="loadForAllTypes">true</sub>
+  </sub>
+  <sub id="Work_Item_Type" data-label="Work Item Type" data-type="Enumeration">
+    <sub id="values">
+      <sub>systemreq</sub>
+    </sub>
+    <sub id="enumId">workitem-type</sub>
+    <sub id="allowNoValue">false</sub>
+    <sub id="allowMultipleValues">true</sub>
+    <sub id="loadForAllTypes">true</sub>
+  </sub>
+  <sub id="WorkItem_ID" data-label="WorkItem ID" data-type="String"></sub>
+</span>]]></field>
+    <field id="title">RQIS Übersicht für ein LH</field>
+</rich-page>

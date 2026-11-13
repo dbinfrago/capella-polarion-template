@@ -1,0 +1,4 @@
+## SPDX-FileCopyrightText: Copyright DB InfraGO AG and contributors
+## SPDX-License-Identifier: Apache-2.0
+$!parameters.put("dataSet", $factory.dataSet("Work Items").build())
+$!parameters.put("maxItems", $factory.integer("Max. Work Items").value(300).build())

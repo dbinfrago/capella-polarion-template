@@ -1,0 +1,174 @@
+## SPDX-FileCopyrightText: Copyright DB InfraGO AG and contributors
+## SPDX-License-Identifier: Apache-2.0
+##
+## Work item table with a clickable cfRQISPipelineScheduled checkbox per row
+## and a select-all checkbox in the column header. The rows come from the
+## widget's "Work Items" data set parameter (configure it like the query of
+## the built-in Table widget, e.g. Lucene + Velocity with page parameters).
+## Writes go through the Polarion REST API with the viewer's session token
+## (top.getRestApiToken()), which needs
+## com.siemens.polarion.rest.security.restApiToken.enabled=true.
+#set($fieldId = "cfRQISPipelineScheduled")
+#set($projectId = $page.getReference().projectId())
+#set($maxItems = $parameters.maxItems.value)
+#set($dataSet = $parameters.dataSet.getFor().sort("id").revision($null))
+#set($total = $dataSet.size())
+#set($shown = 0)
+<div class="rqis-sched-root" data-project="$esc.html($projectId)" data-field="$fieldId">
+  <div class="rqis-sched-status" style="margin:4px 0;min-height:1.2em;"></div>
+  <table class="polarion-rpw-table-content" style="width:100%;">
+    <tbody>
+      <tr class="polarion-rpw-table-header-row">
+        <th>ID</th>
+        <th>Typ</th>
+        <th>Titel</th>
+        <th>Beschreibung</th>
+        <th>RQIS Score</th>
+        <th>RQIS Bewertung</th>
+        <th style="white-space:nowrap;">
+          <label title="Alle angezeigten Work Items setzen oder zurücksetzen">
+            <input type="checkbox" class="rqis-sched-all"> RQIS Ausführung geplant
+          </label>
+        </th>
+      </tr>
+#foreach($wi in $dataSet.items())
+  #if($shown >= $maxItems)
+    #break
+  #end
+  #set($shown = $shown + 1)
+  #set($wiId = $wi.fields().id().get())
+      <tr class="polarion-rpw-table-content-row">
+        <td style="white-space:nowrap;"><a href="/polarion/#/project/$esc.url($projectId)/workitem?id=$esc.url($wiId)" target="_top">$esc.html($wiId)</a></td>
+        <td>$wi.fields().type().render().htmlFor().forFrame()</td>
+        <td>$esc.html($wi.fields().title().get())</td>
+        <td>$wi.fields().description().render().htmlFor().forFrame()</td>
+        <td>$wi.fields().get("cfRQISScore").render().htmlFor().forFrame()</td>
+        <td><div style="max-height:200px;overflow:auto;">$wi.fields().get("cfRQISEvaluation").render().htmlFor().forFrame()</div></td>
+        <td style="text-align:center;"><input type="checkbox" class="rqis-sched-box" data-wi="$esc.html($wiId)" data-scheduled="$wi.fields().get($fieldId).get()"></td>
+      </tr>
+#end
+    </tbody>
+  </table>
+  <div style="margin-top:4px;color:#666;">$shown von $total Work Items#if($shown < $total) (Limit "Max. Work Items" erreicht)#end</div>
+</div>
+<script>
+(function () {
+  var CHUNK = 50;
+
+  function init(root) {
+    root.setAttribute("data-ready", "1");
+    var projectId = root.getAttribute("data-project");
+    var fieldId = root.getAttribute("data-field");
+    var all = root.querySelector(".rqis-sched-all");
+    var status = root.querySelector(".rqis-sched-status");
+
+    function boxes() {
+      return Array.prototype.slice.call(root.querySelectorAll(".rqis-sched-box"));
+    }
+
+    function sync() {
+      var list = boxes();
+      var on = list.filter(function (b) { return b.checked; }).length;
+      all.checked = list.length > 0 && on === list.length;
+      all.indeterminate = on > 0 && on < list.length;
+      all.disabled = list.length === 0 || list.some(function (b) { return b.disabled; });
+    }
+
+    function say(text, isError) {
+      status.textContent = text;
+      status.style.color = isError ? "#c00" : "#333";
+    }
+
+    function restToken() {
+      var token = null;
+      try { token = top.getRestApiToken(); } catch (e) { token = null; }
+      if (!token) {
+        throw new Error("Kein REST-Token der Sitzung verfügbar "
+          + "(com.siemens.polarion.rest.security.restApiToken.enabled=true fehlt).");
+      }
+      return token;
+    }
+
+    function patch(ids, value) {
+      var data = ids.map(function (id) {
+        var attributes = {};
+        attributes[fieldId] = value;
+        return { type: "workitems", id: projectId + "/" + id, attributes: attributes };
+      });
+      return Promise.resolve().then(function () {
+        return fetch("/polarion/rest/v1/projects/" + encodeURIComponent(projectId) + "/workitems", {
+          method: "PATCH",
+          credentials: "same-origin",
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "X-Polarion-REST-Token": restToken()
+          },
+          body: JSON.stringify({ data: data })
+        });
+      }).then(function (response) {
+        if (response.ok) { return; }
+        return response.text().then(function (text) {
+          var message = "HTTP " + response.status;
+          try {
+            var error = JSON.parse(text).errors[0];
+            message += ": " + (error.detail || error.title);
+          } catch (e) { /* non-JSON error body */ }
+          throw new Error(message);
+        });
+      });
+    }
+
+    function apply(list, value) {
+      list.forEach(function (b) { b.disabled = true; });
+      sync();
+      var done = 0;
+      var chain = Promise.resolve();
+      for (var i = 0; i < list.length; i += CHUNK) {
+        (function (part) {
+          chain = chain.then(function () {
+            return patch(part.map(function (b) { return b.getAttribute("data-wi"); }), value)
+              .then(function () {
+                part.forEach(function (b) { b.checked = value; });
+                done += part.length;
+                if (list.length > 1) { say(done + " / " + list.length + " gespeichert …", false); }
+              });
+          });
+        })(list.slice(i, i + CHUNK));
+      }
+      return chain.then(function () {
+        say(done + " Work Item(s) " + (value ? "zur RQIS-Ausführung geplant." : "zurückgesetzt."), false);
+      }, function (error) {
+        say("Speichern fehlgeschlagen nach " + done + " von " + list.length + ": " + error.message, true);
+      }).then(function () {
+        list.forEach(function (b) { b.disabled = false; });
+        sync();
+      });
+    }
+
+    root.addEventListener("change", function (event) {
+      var target = event.target;
+      if (target.classList.contains("rqis-sched-box")) {
+        var wanted = target.checked;
+        target.checked = !wanted;
+        apply([target], wanted);
+      } else if (target === all) {
+        var value = all.checked;
+        var pending = boxes().filter(function (b) { return b.checked !== value; });
+        if (pending.length === 0
+          || !confirm(pending.length + " Work Item(s) " + (value ? "zur RQIS-Ausführung planen?" : "zurücksetzen?"))) {
+          sync();
+          return;
+        }
+        apply(pending, value);
+      }
+    });
+
+    // Polarion strips the boolean "checked" attribute from widget HTML.
+    boxes().forEach(function (b) { b.checked = b.getAttribute("data-scheduled") === "true"; });
+    sync();
+  }
+
+  Array.prototype.slice.call(document.querySelectorAll(".rqis-sched-root:not([data-ready])")).forEach(init);
+})();
+</script>
