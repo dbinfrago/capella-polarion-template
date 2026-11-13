@@ -20,7 +20,7 @@ SPDX-License-Identifier: Apache-2.0 -->
     </span>
   </div>
   <p id="polarion_client10"></p>
-  <div id="polarion_client5" class="polarion-rp-widget-part" data-widget="com.polarion.table">
+  <div id="polarion_client5" class="polarion-rp-widget-part" data-widget="rqis-scheduled-table">
     <span class="polarion-rp-widget-parameters">
       <sub id="dataSet">
         <sub id="prototype">WorkItem</sub>
@@ -42,38 +42,8 @@ SPDX-License-Identifier: Apache-2.0 -->
     #set($query = &quot;$query AND document.id:${esc.q}$docId${esc.q}&quot;)
 #end
 $query</sub>
-        <sub id="children">
-          <sub id="columns">
-            <sub>
-              <sub id="id">id</sub>
-            </sub>
-            <sub>
-              <sub id="id">title</sub>
-            </sub>
-            <sub>
-              <sub id="id">description</sub>
-            </sub>
-            <sub>
-              <sub id="id">cfRQISScore</sub>
-            </sub>
-            <sub>
-              <sub id="id">cfRQISEvaluation</sub>
-            </sub>
-            <sub>
-              <sub id="id">cfRQISPipelineScheduled</sub>
-            </sub>
-          </sub>
-          <sub id="sortBy"></sub>
-        </sub>
       </sub>
-      <sub id="propertiesSidebarFields">
-        <sub>
-          <sub id="id">description</sub>
-        </sub>
-      </sub>
-      <sub id="advanced">
-        <sub id="top">300</sub>
-      </sub>
+      <sub id="maxItems">300</sub>
     </span>
   </div>
   <p id="polarion_2"></p>

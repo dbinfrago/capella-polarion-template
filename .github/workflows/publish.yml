@@ -31,3 +31,19 @@ jobs:
         asset_path: ./${{ vars.TEMPLATE_FILENAME }}.zip
         asset_name: ${{ vars.TEMPLATE_FILENAME }}.zip
         asset_content_type: application/zip
+    # Standalone widget ZIP for "Administration > Documents & Pages > Velocity
+    # Widgets > Upload" in existing projects. Polarion expects the widget folder
+    # at the ZIP root and rejects ZIP file names longer than 30 characters.
+    - name: Zip RQIS Widget
+      working-directory: template/.polarion/pages/widgets
+      run: |
+        zip -r "$GITHUB_WORKSPACE/rqis-scheduled-table.zip" rqis-scheduled-table
+    - name: Attach RQIS widget ZIP file to release
+      uses: shogo82148/actions-upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./rqis-scheduled-table.zip
+        asset_name: rqis-scheduled-table.zip
+        asset_content_type: application/zip
